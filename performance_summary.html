@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Food Delivery Network — Performance Summary</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;color:#1a1a19;background:#fff;margin:0;padding:28px;max-width:900px;}
+  h1{font-size:22px;font-weight:600;margin:0 0 4px;}
+  .sub{color:#52514e;font-size:13px;margin:0 0 20px;}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 24px;}
+  .card{background:#f5f4ef;border-radius:8px;padding:14px 16px;}
+  .card .l{font-size:12px;color:#52514e;}
+  .card .v{font-size:22px;font-weight:600;margin-top:2px;}
+  .card .h{font-size:11px;color:#898781;margin-top:2px;}
+  .legend{display:flex;gap:18px;font-size:12px;color:#52514e;margin:0 0 8px;}
+  .legend span{display:flex;align-items:center;gap:6px;}
+  .sw{width:11px;height:11px;border-radius:2px;display:inline-block;}
+  .ctitle{font-size:13px;color:#52514e;margin:20px 0 6px;}
+  .cwrap{position:relative;width:100%;height:250px;}
+  table{border-collapse:collapse;width:100%;font-size:13px;margin-top:22px;}
+  th,td{border:1px solid #e1e0d9;padding:7px 10px;text-align:left;}
+  th{background:#f5f4ef;font-weight:600;}
+  td.n{text-align:right;font-variant-numeric:tabular-nums;}
+  .foot{font-size:12px;color:#898781;margin-top:18px;}
+</style>
+</head>
+<body>
+<h1>Food Delivery Network — Performance Summary</h1>
+<p class="sub">OMNeT++ / INET simulation · 300 s run · two load profiles (General vs HighLoad)</p>
+
+<div class="cards">
+  <div class="card"><div class="l">Orders delivered</div><div class="v">54 / 187</div><div class="h">General / HighLoad</div></div>
+  <div class="card"><div class="l">Mean end-to-end delay</div><div class="v">13.5 s</div><div class="h">≈ 3.5 s prep + 10 s delivery</div></div>
+  <div class="card"><div class="l">Throughput</div><div class="v">0.18 → 0.62</div><div class="h">orders / second</div></div>
+  <div class="card"><div class="l">Completion ratio</div><div class="v">96 %+</div><div class="h">rest in-flight at end</div></div>
+</div>
+
+<div class="legend">
+  <span><span class="sw" style="background:#2a78d6"></span>General (order every ~5 s)</span>
+  <span><span class="sw" style="background:#1baf7a"></span>HighLoad (order every ~1.5 s)</span>
+</div>
+
+<div class="ctitle">Order processing pipeline (counts at each stage)</div>
+<div class="cwrap"><canvas id="funnelChart"></canvas></div>
+
+<div class="ctitle">End-to-end delay (seconds)</div>
+<div class="cwrap"><canvas id="delayChart"></canvas></div>
+
+<div class="ctitle">Throughput (orders delivered per second)</div>
+<div class="cwrap" style="height:180px"><canvas id="thrChart"></canvas></div>
+
+<table>
+  <tr><th>Metric</th><th>General</th><th>HighLoad</th></tr>
+  <tr><td>Orders placed</td><td class="n">56</td><td class="n">193</td></tr>
+  <tr><td>Orders delivered</td><td class="n">54</td><td class="n">187</td></tr>
+  <tr><td>Completion ratio</td><td class="n">96.4 %</td><td class="n">96.9 %</td></tr>
+  <tr><td>Mean end-to-end delay (s)</td><td class="n">13.47</td><td class="n">13.59</td></tr>
+  <tr><td>Min / Max delay (s)</td><td class="n">7.59 / 19.01</td><td class="n">7.86 / 19.02</td></tr>
+  <tr><td>Mean prep duration (s)</td><td class="n">3.52</td><td class="n">3.53</td></tr>
+  <tr><td>Mean delivery duration (s)</td><td class="n">9.95</td><td class="n">10.05</td></tr>
+  <tr><td>Throughput (orders/s)</td><td class="n">0.18</td><td class="n">0.62</td></tr>
+</table>
+
+<p class="foot">Note: a few orders placed near the end of the 300 s run are still being prepared/delivered when the simulation stops, so delivered counts are slightly below placed counts (≈96 % completion). The mean delay stays ~13.5 s under both loads because the single restaurant and rider process concurrent orders in parallel, so no queue builds up.</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const BLUE='#2a78d6', AQUA='#1baf7a', muted='#898781', grid='rgba(140,135,129,0.2)';
+const opt=(yt)=>({responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false}},
+  scales:{x:{grid:{display:false},ticks:{color:muted,font:{size:11}}},
+          y:{beginAtZero:true,grid:{color:grid},ticks:{color:muted,font:{size:11}},title:{display:!!yt,text:yt,color:muted,font:{size:11}}}}});
+new Chart(funnelChart,{type:'bar',data:{labels:['Placed','Received','Dispatched','Prepared','Delivered'],
+  datasets:[{label:'General',data:[56,56,56,56,54],backgroundColor:BLUE,borderRadius:4,barThickness:18},
+            {label:'HighLoad',data:[193,193,192,192,187],backgroundColor:AQUA,borderRadius:4,barThickness:18}]},options:opt('orders')});
+new Chart(delayChart,{type:'bar',data:{labels:['Min','Mean','Max'],
+  datasets:[{label:'General',data:[7.59,13.47,19.01],backgroundColor:BLUE,borderRadius:4,barThickness:28},
+            {label:'HighLoad',data:[7.86,13.59,19.02],backgroundColor:AQUA,borderRadius:4,barThickness:28}]},options:opt('seconds')});
+new Chart(thrChart,{type:'bar',data:{labels:['General (~5 s)','HighLoad (~1.5 s)'],
+  datasets:[{label:'Throughput',data:[0.18,0.62],backgroundColor:[BLUE,AQUA],borderRadius:4,barThickness:48}]},options:opt('orders / s')});
+</script>
+</body>
+</html>

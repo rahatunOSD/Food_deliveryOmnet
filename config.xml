@@ -1,0 +1,18 @@
+<!--
+  Explicit IP addressing for the Food Delivery Network.
+  Each interface is identified by the host and the neighbour it faces (towards),
+  so every communicating pair shares one subnet and talks over a direct link.
+-->
+<config>
+    <interface hosts='customer'   towards='dispatcher' address='10.0.1.1' netmask='255.255.255.0'/>
+    <interface hosts='dispatcher' towards='customer'   address='10.0.1.2' netmask='255.255.255.0'/>
+
+    <interface hosts='dispatcher' towards='restaurant' address='10.0.2.1' netmask='255.255.255.0'/>
+    <interface hosts='restaurant' towards='dispatcher' address='10.0.2.2' netmask='255.255.255.0'/>
+
+    <interface hosts='dispatcher' towards='rider'      address='10.0.3.1' netmask='255.255.255.0'/>
+    <interface hosts='rider'      towards='dispatcher' address='10.0.3.2' netmask='255.255.255.0'/>
+
+    <interface hosts='rider'      towards='customer'   address='10.0.4.1' netmask='255.255.255.0'/>
+    <interface hosts='customer'   towards='rider'      address='10.0.4.2' netmask='255.255.255.0'/>
+</config>
